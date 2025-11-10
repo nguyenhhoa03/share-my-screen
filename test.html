@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chia sẻ Màn hình - PeerJS</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -21,241 +21,156 @@
             align-items: center;
             padding: 20px;
         }
-
+        
         .container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
             max-width: 900px;
             width: 100%;
-            padding: 40px;
         }
-
+        
         h1 {
-            color: #333;
+            color: #667eea;
+            margin-bottom: 20px;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 2em;
         }
-
+        
         .status {
-            text-align: center;
+            background: #f0f0f0;
             padding: 15px;
             border-radius: 10px;
             margin-bottom: 20px;
-            font-weight: 600;
+            text-align: center;
         }
-
-        .status.waiting {
-            background: #fff3cd;
-            color: #856404;
-        }
-
+        
         .status.connected {
             background: #d4edda;
             color: #155724;
         }
-
+        
         .status.error {
             background: #f8d7da;
             color: #721c24;
         }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 12px 30px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-
-        .share-link-container {
-            display: none;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .share-link-container.active {
-            display: block;
-        }
-
-        .share-link-container h3 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .link-box {
+        
+        .button-group {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
-
-        .link-input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: monospace;
-        }
-
-        .btn-copy {
-            background: #28a745;
+        
+        button {
+            background: #667eea;
             color: white;
-            padding: 12px 25px;
             border: none;
+            padding: 12px 24px;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
+            font-size: 16px;
             transition: all 0.3s;
         }
-
-        .btn-copy:hover {
-            background: #218838;
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
         }
-
-        .qr-code {
-            text-align: center;
-            margin-top: 15px;
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
-
-        .qr-code canvas {
-            border: 3px solid #667eea;
+        
+        .share-link {
+            background: #e7f3ff;
+            padding: 15px;
             border-radius: 10px;
-            padding: 10px;
-            background: white;
+            margin-bottom: 20px;
+            display: none;
         }
-
+        
+        .share-link.show {
+            display: block;
+        }
+        
+        .share-link input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
         .video-container {
             position: relative;
+            width: 100%;
             background: #000;
             border-radius: 10px;
             overflow: hidden;
-            margin-top: 20px;
+            display: none;
         }
-
+        
+        .video-container.show {
+            display: block;
+        }
+        
         video {
             width: 100%;
             height: auto;
             display: block;
         }
-
-        .video-label {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .info-box {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
+        
+        .info {
+            background: #fff3cd;
             padding: 15px;
+            border-radius: 10px;
             margin-bottom: 20px;
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        .peer-id {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 5px 10px;
             border-radius: 5px;
-        }
-
-        .info-box p {
-            margin: 5px 0;
-            color: #333;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 1.5em;
-            }
-
-            .controls {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
+            display: inline-block;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📺 Chia sẻ Màn hình</h1>
+        <h1>🖥️ Chia sẻ Màn hình</h1>
         
-        <div id="status" class="status waiting">
-            Đang khởi tạo...
+        <div id="status" class="status">
+            Đang khởi tạo kết nối...
         </div>
-
-        <div class="info-box">
-            <p><strong>Hướng dẫn:</strong></p>
-            <p id="instruction">Nhấn "Bắt đầu chia sẻ" để chia sẻ màn hình của bạn</p>
+        
+        <div class="info" id="info">
+            <strong>Hướng dẫn:</strong><br>
+            • Người chia sẻ: Nhấn "Bắt đầu chia sẻ" và gửi link cho người xem<br>
+            • Người xem: Truy cập link được chia sẻ để xem màn hình
         </div>
-
-        <div class="controls">
-            <button id="startBtn" class="btn-primary">Bắt đầu Chia sẻ</button>
-            <button id="stopBtn" class="btn-danger" style="display: none;">Dừng Chia sẻ</button>
+        
+        <div class="button-group">
+            <button id="startBtn" onclick="startSharing()">Bắt đầu Chia sẻ</button>
+            <button id="stopBtn" onclick="stopSharing()" style="display:none;">Dừng Chia sẻ</button>
+            <button id="copyBtn" onclick="copyLink()" style="display:none;">Sao chép Link</button>
         </div>
-
-        <div id="shareLinkContainer" class="share-link-container">
-            <h3>🔗 Link để xem màn hình:</h3>
-            <div class="link-box">
-                <input type="text" id="shareLink" class="link-input" readonly>
-                <button id="copyBtn" class="btn-copy">Copy</button>
-            </div>
-            <p style="color: #666; font-size: 14px;">Chia sẻ link này để người khác xem màn hình của bạn</p>
+        
+        <div id="shareLink" class="share-link">
+            <strong>Link chia sẻ:</strong>
+            <input type="text" id="linkInput" readonly>
         </div>
-
-        <div class="video-container" style="display: none;" id="videoContainer">
-            <video id="localVideo" autoplay muted playsinline></video>
-            <div class="video-label">Màn hình của bạn</div>
-        </div>
-
-        <div class="video-container" style="display: none;" id="remoteVideoContainer">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <div class="video-label">Màn hình đang xem</div>
+        
+        <div id="videoContainer" class="video-container">
+            <video id="video" autoplay playsinline></video>
         </div>
     </div>
 
@@ -263,88 +178,53 @@
         let peer = null;
         let localStream = null;
         let currentCall = null;
-        const urlParams = new URLSearchParams(window.location.search);
-        const viewerId = urlParams.get('id');
-        const isViewer = !!viewerId;
+        let myPeerId = null;
+        const isViewer = new URLSearchParams(window.location.search).has('id');
+        const viewerId = new URLSearchParams(window.location.search).get('id');
 
-        const elements = {
-            status: document.getElementById('status'),
-            instruction: document.getElementById('instruction'),
-            startBtn: document.getElementById('startBtn'),
-            stopBtn: document.getElementById('stopBtn'),
-            shareLink: document.getElementById('shareLink'),
-            shareLinkContainer: document.getElementById('shareLinkContainer'),
-            copyBtn: document.getElementById('copyBtn'),
-            localVideo: document.getElementById('localVideo'),
-            remoteVideo: document.getElementById('remoteVideo'),
-            videoContainer: document.getElementById('videoContainer'),
-            remoteVideoContainer: document.getElementById('remoteVideoContainer')
-        };
-
-        function updateStatus(message, type = 'waiting') {
-            elements.status.textContent = message;
-            elements.status.className = `status ${type}`;
-        }
-
+        // Khởi tạo PeerJS
         function initPeer() {
-            peer = new Peer({
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' }
-                    ]
-                }
-            });
-
-            peer.on('open', (id) => {
-                console.log('Peer ID:', id);
+            peer = new Peer();
+            
+            peer.on('open', function(id) {
+                myPeerId = id;
+                console.log('My peer ID is: ' + id);
                 
                 if (isViewer) {
-                    connectToHost();
+                    // Nếu là người xem, tự động kết nối
+                    connectToSharer();
                 } else {
-                    updateStatus(`✅ Đã sẵn sàng! Peer ID: ${id}`, 'connected');
+                    // Nếu là người chia sẻ
+                    updateStatus('Đã kết nối đến server. Peer ID: ' + id, 'connected');
+                    document.getElementById('info').innerHTML = 
+                        '<strong>Peer ID của bạn:</strong><br>' +
+                        '<span class="peer-id">' + id + '</span><br>' +
+                        'Nhấn "Bắt đầu chia sẻ" để lấy link chia sẻ.';
                 }
             });
 
-            peer.on('call', (call) => {
-                console.log('Nhận cuộc gọi từ:', call.peer);
-                
-                if (!isViewer && localStream) {
-                    // Host nhận cuộc gọi từ viewer và gửi lại screen stream
-                    updateStatus('👤 Có người đang xem màn hình', 'connected');
+            peer.on('error', function(err) {
+                console.error('PeerJS error:', err);
+                updateStatus('Lỗi: ' + err.type, 'error');
+            });
+
+            // Xử lý cuộc gọi đến (cho người chia sẻ)
+            peer.on('call', function(call) {
+                console.log('Receiving call from viewer');
+                if (localStream) {
                     call.answer(localStream);
                     currentCall = call;
-
-                    call.on('close', () => {
-                        console.log('Cuộc gọi đã đóng');
-                        updateStatus('🎥 Đang chia sẻ màn hình. Sẵn sàng nhận kết nối!', 'connected');
-                    });
-
-                    call.on('error', (err) => {
-                        console.error('Lỗi cuộc gọi:', err);
-                    });
-                } else if (isViewer) {
-                    // Viewer nhận cuộc gọi (không dùng trong trường hợp này)
-                    call.answer(new MediaStream());
-                    
-                    call.on('stream', (remoteStream) => {
-                        console.log('Nhận được stream từ host');
-                        elements.remoteVideo.srcObject = remoteStream;
-                        elements.remoteVideoContainer.style.display = 'block';
-                        updateStatus('✅ Đã kết nối! Đang xem màn hình', 'connected');
-                        elements.instruction.textContent = 'Bạn đang xem màn hình được chia sẻ';
-                    });
+                    updateStatus('Đang chia sẻ màn hình với người xem...', 'connected');
                 }
-            });
-
-            peer.on('error', (err) => {
-                console.error('Lỗi Peer:', err);
-                updateStatus(`❌ Lỗi: ${err.type}`, 'error');
             });
         }
 
-        async function startScreenShare() {
+        // Bắt đầu chia sẻ màn hình
+        async function startSharing() {
             try {
+                updateStatus('Đang yêu cầu quyền chia sẻ màn hình...', '');
+                
+                // Lấy màn hình
                 localStream = await navigator.mediaDevices.getDisplayMedia({
                     video: {
                         cursor: "always"
@@ -352,137 +232,110 @@
                     audio: false
                 });
 
-                elements.localVideo.srcObject = localStream;
-                elements.videoContainer.style.display = 'block';
-                elements.startBtn.style.display = 'none';
-                elements.stopBtn.style.display = 'inline-block';
+                // Hiển thị video preview
+                const video = document.getElementById('video');
+                video.srcObject = localStream;
+                document.getElementById('videoContainer').classList.add('show');
 
-                localStream.getVideoTracks()[0].onended = () => {
-                    stopScreenShare();
+                // Tạo link chia sẻ
+                const shareUrl = window.location.origin + window.location.pathname + '?id=' + myPeerId;
+                document.getElementById('linkInput').value = shareUrl;
+                document.getElementById('shareLink').classList.add('show');
+                
+                // Cập nhật UI
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'inline-block';
+                document.getElementById('copyBtn').style.display = 'inline-block';
+                
+                updateStatus('Đang chia sẻ màn hình. Gửi link cho người xem!', 'connected');
+
+                // Xử lý khi người dùng dừng chia sẻ từ trình duyệt
+                localStream.getVideoTracks()[0].onended = function() {
+                    stopSharing();
                 };
 
-                const shareUrl = `${window.location.origin}${window.location.pathname}?id=${peer.id}`;
-                elements.shareLink.value = shareUrl;
-                elements.shareLinkContainer.classList.add('active');
-
-                updateStatus('🎥 Đang chia sẻ màn hình. Sẵn sàng nhận kết nối!', 'connected');
-                elements.instruction.textContent = 'Chia sẻ link bên dưới để người khác xem màn hình của bạn';
-
             } catch (err) {
-                console.error('Lỗi khi lấy màn hình:', err);
-                updateStatus('❌ Không thể lấy màn hình. Vui lòng thử lại!', 'error');
+                console.error('Error sharing screen:', err);
+                updateStatus('Không thể chia sẻ màn hình: ' + err.message, 'error');
             }
         }
 
-        function stopScreenShare() {
+        // Dừng chia sẻ
+        function stopSharing() {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
                 localStream = null;
             }
-
+            
             if (currentCall) {
                 currentCall.close();
                 currentCall = null;
             }
 
-            elements.localVideo.srcObject = null;
-            elements.videoContainer.style.display = 'none';
-            elements.startBtn.style.display = 'inline-block';
-            elements.stopBtn.style.display = 'none';
-            elements.shareLinkContainer.classList.remove('active');
-
-            updateStatus('✅ Đã dừng chia sẻ màn hình', 'connected');
-            elements.instruction.textContent = 'Nhấn "Bắt đầu chia sẻ" để chia sẻ màn hình của bạn';
+            document.getElementById('video').srcObject = null;
+            document.getElementById('videoContainer').classList.remove('show');
+            document.getElementById('shareLink').classList.remove('show');
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('copyBtn').style.display = 'none';
+            
+            updateStatus('Đã dừng chia sẻ màn hình.', '');
         }
 
-        function connectToHost() {
-            updateStatus(`🔄 Đang kết nối đến: ${viewerId}`, 'waiting');
-            elements.instruction.textContent = 'Đang kết nối để xem màn hình...';
-            elements.startBtn.style.display = 'none';
-
-            // Tạo một dummy stream để gửi
-            const call = peer.call(viewerId, new MediaStream());
+        // Kết nối đến người chia sẻ (cho người xem)
+        function connectToSharer() {
+            updateStatus('Đang kết nối đến người chia sẻ...', '');
+            document.getElementById('info').innerHTML = 'Đang kết nối để xem màn hình...';
+            document.getElementById('startBtn').style.display = 'none';
             
-            if (!call) {
-                updateStatus('❌ Không thể tạo kết nối', 'error');
-                return;
-            }
+            const call = peer.call(viewerId, null);
             
-            currentCall = call;
-
-            call.on('stream', (remoteStream) => {
-                console.log('Nhận được stream từ host, tracks:', remoteStream.getTracks().length);
-                elements.remoteVideo.srcObject = remoteStream;
-                elements.remoteVideoContainer.style.display = 'block';
-                updateStatus('✅ Đã kết nối! Đang xem màn hình', 'connected');
-                elements.instruction.textContent = 'Bạn đang xem màn hình được chia sẻ';
+            call.on('stream', function(remoteStream) {
+                console.log('Receiving remote stream');
+                const video = document.getElementById('video');
+                video.srcObject = remoteStream;
+                document.getElementById('videoContainer').classList.add('show');
+                updateStatus('Đang xem màn hình được chia sẻ', 'connected');
+                document.getElementById('info').style.display = 'none';
             });
 
-            call.on('close', () => {
-                console.log('Kết nối đã đóng');
-                elements.remoteVideo.srcObject = null;
-                elements.remoteVideoContainer.style.display = 'none';
-                updateStatus('❌ Kết nối đã bị ngắt', 'error');
-                elements.instruction.textContent = 'Người chia sẻ đã dừng chia sẻ màn hình';
+            call.on('close', function() {
+                updateStatus('Người chia sẻ đã ngắt kết nối', 'error');
+                document.getElementById('video').srcObject = null;
+                document.getElementById('videoContainer').classList.remove('show');
             });
 
-            call.on('error', (err) => {
-                console.error('Lỗi cuộc gọi:', err);
-                updateStatus(`❌ Không thể kết nối: ${err.type}`, 'error');
+            call.on('error', function(err) {
+                console.error('Call error:', err);
+                updateStatus('Lỗi kết nối: ' + err.type, 'error');
             });
-
-            // Timeout nếu không nhận được stream sau 10 giây
-            setTimeout(() => {
-                if (!elements.remoteVideo.srcObject) {
-                    updateStatus('❌ Timeout: Không nhận được stream từ host', 'error');
-                    elements.instruction.textContent = 'Không thể kết nối. Đảm bảo người chia sẻ đã bật chia sẻ màn hình.';
-                }
-            }, 10000);
         }
 
-        elements.startBtn.addEventListener('click', startScreenShare);
-        elements.stopBtn.addEventListener('click', stopScreenShare);
-
-        elements.copyBtn.addEventListener('click', () => {
-            elements.shareLink.select();
+        // Sao chép link
+        function copyLink() {
+            const linkInput = document.getElementById('linkInput');
+            linkInput.select();
             document.execCommand('copy');
             
-            const originalText = elements.copyBtn.textContent;
-            elements.copyBtn.textContent = '✓ Đã copy!';
-            elements.copyBtn.style.background = '#218838';
-            
+            const btn = document.getElementById('copyBtn');
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Đã sao chép!';
             setTimeout(() => {
-                elements.copyBtn.textContent = originalText;
-                elements.copyBtn.style.background = '#28a745';
+                btn.textContent = originalText;
             }, 2000);
-        });
-
-        // Đợi PeerJS library load xong
-        window.addEventListener('load', () => {
-            // Kiểm tra PeerJS đã load chưa
-            if (typeof Peer === 'undefined') {
-                console.log('Đang đợi PeerJS load...');
-                const checkPeer = setInterval(() => {
-                    if (typeof Peer !== 'undefined') {
-                        clearInterval(checkPeer);
-                        startApp();
-                    }
-                }, 100);
-            } else {
-                startApp();
-            }
-        });
-
-        function startApp() {
-            if (isViewer) {
-                elements.instruction.textContent = 'Bạn đang ở chế độ xem màn hình';
-                updateStatus('🔄 Đang khởi tạo kết nối...', 'waiting');
-            } else {
-                updateStatus('🔄 Đang khởi tạo PeerJS...', 'waiting');
-            }
-
-            initPeer();
         }
+
+        // Cập nhật trạng thái
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status' + (type ? ' ' + type : '');
+        }
+
+        // Khởi động ứng dụng
+        window.onload = function() {
+            initPeer();
+        };
     </script>
 </body>
 </html>
