@@ -433,14 +433,32 @@
             }, 2000);
         });
 
-        if (isViewer) {
-            elements.instruction.textContent = 'Bạn đang ở chế độ xem màn hình';
-            updateStatus('🔄 Đang khởi tạo kết nối...', 'waiting');
-        } else {
-            updateStatus('🔄 Đang khởi tạo PeerJS...', 'waiting');
-        }
+        // Đợi PeerJS library load xong
+        window.addEventListener('load', () => {
+            // Kiểm tra PeerJS đã load chưa
+            if (typeof Peer === 'undefined') {
+                console.log('Đang đợi PeerJS load...');
+                const checkPeer = setInterval(() => {
+                    if (typeof Peer !== 'undefined') {
+                        clearInterval(checkPeer);
+                        startApp();
+                    }
+                }, 100);
+            } else {
+                startApp();
+            }
+        });
 
-        initPeer();
+        function startApp() {
+            if (isViewer) {
+                elements.instruction.textContent = 'Bạn đang ở chế độ xem màn hình';
+                updateStatus('🔄 Đang khởi tạo kết nối...', 'waiting');
+            } else {
+                updateStatus('🔄 Đang khởi tạo PeerJS...', 'waiting');
+            }
+
+            initPeer();
+        }
     </script>
 </body>
 </html>
