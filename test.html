@@ -309,23 +309,32 @@
             peer.on('call', (call) => {
                 console.log('Nhận cuộc gọi từ:', call.peer);
                 
-                if (!isViewer) {
-                    updateStatus('⚠️ Có người đang kết nối để xem màn hình', 'waiting');
+                if (!isViewer && localStream) {
+                    // Host nhận cuộc gọi từ viewer và gửi lại screen stream
+                    updateStatus('👤 Có người đang xem màn hình', 'connected');
+                    call.answer(localStream);
+                    currentCall = call;
+
+                    call.on('close', () => {
+                        console.log('Cuộc gọi đã đóng');
+                        updateStatus('🎥 Đang chia sẻ màn hình. Sẵn sàng nhận kết nối!', 'connected');
+                    });
+
+                    call.on('error', (err) => {
+                        console.error('Lỗi cuộc gọi:', err);
+                    });
+                } else if (isViewer) {
+                    // Viewer nhận cuộc gọi (không dùng trong trường hợp này)
+                    call.answer(new MediaStream());
+                    
+                    call.on('stream', (remoteStream) => {
+                        console.log('Nhận được stream từ host');
+                        elements.remoteVideo.srcObject = remoteStream;
+                        elements.remoteVideoContainer.style.display = 'block';
+                        updateStatus('✅ Đã kết nối! Đang xem màn hình', 'connected');
+                        elements.instruction.textContent = 'Bạn đang xem màn hình được chia sẻ';
+                    });
                 }
-                
-                call.answer(localStream);
-                currentCall = call;
-
-                call.on('stream', (remoteStream) => {
-                    console.log('Nhận được stream');
-                });
-
-                call.on('close', () => {
-                    console.log('Cuộc gọi đã đóng');
-                    if (!isViewer) {
-                        updateStatus('👤 Người xem đã ngắt kết nối', 'waiting');
-                    }
-                });
             });
 
             peer.on('error', (err) => {
@@ -391,11 +400,18 @@
             elements.instruction.textContent = 'Đang kết nối để xem màn hình...';
             elements.startBtn.style.display = 'none';
 
+            // Tạo một dummy stream để gửi
             const call = peer.call(viewerId, new MediaStream());
+            
+            if (!call) {
+                updateStatus('❌ Không thể tạo kết nối', 'error');
+                return;
+            }
+            
             currentCall = call;
 
             call.on('stream', (remoteStream) => {
-                console.log('Nhận được stream từ host');
+                console.log('Nhận được stream từ host, tracks:', remoteStream.getTracks().length);
                 elements.remoteVideo.srcObject = remoteStream;
                 elements.remoteVideoContainer.style.display = 'block';
                 updateStatus('✅ Đã kết nối! Đang xem màn hình', 'connected');
@@ -412,8 +428,16 @@
 
             call.on('error', (err) => {
                 console.error('Lỗi cuộc gọi:', err);
-                updateStatus('❌ Không thể kết nối', 'error');
+                updateStatus(`❌ Không thể kết nối: ${err.type}`, 'error');
             });
+
+            // Timeout nếu không nhận được stream sau 10 giây
+            setTimeout(() => {
+                if (!elements.remoteVideo.srcObject) {
+                    updateStatus('❌ Timeout: Không nhận được stream từ host', 'error');
+                    elements.instruction.textContent = 'Không thể kết nối. Đảm bảo người chia sẻ đã bật chia sẻ màn hình.';
+                }
+            }, 10000);
         }
 
         elements.startBtn.addEventListener('click', startScreenShare);
