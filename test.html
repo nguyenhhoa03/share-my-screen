@@ -125,6 +125,50 @@
             display: block;
         }
         
+        /* Overlay Connect Button */
+        .connect-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+        }
+        
+        .connect-overlay.hidden {
+            display: none;
+        }
+        
+        .connect-overlay h2 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .connect-overlay button {
+            background: #28a745;
+            font-size: 20px;
+            padding: 16px 40px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .connect-overlay button:hover {
+            background: #218838;
+            transform: translateY(-2px) scale(1.05);
+        }
+        
+        .connect-overlay p {
+            color: #ccc;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
         .info {
             background: #fff3cd;
             padding: 15px;
@@ -182,6 +226,13 @@
         
         <div id="videoContainer" class="video-container">
             <video id="video" autoplay playsinline muted></video>
+            
+            <!-- Connect Overlay cho người xem -->
+            <div id="connectOverlay" class="connect-overlay hidden">
+                <h2>🎬 Sẵn sàng xem màn hình</h2>
+                <button onclick="activateViewer()">🔊 Kết nối & Phát</button>
+                <p>Nhấn để kích hoạt video và âm thanh</p>
+            </div>
         </div>
 
         <div class="debug" id="debug"></div>
@@ -192,6 +243,7 @@
         let localStream = null;
         let activeCalls = [];
         let myPeerId = null;
+        let pendingRemoteStream = null;
         const isViewer = new URLSearchParams(window.location.search).has('id');
         const viewerId = new URLSearchParams(window.location.search).get('id');
 
@@ -259,7 +311,7 @@
                 });
 
                 call.on('close', function() {
-                    addLog('📴 Viewer đã ngắt kết nối: ' + call.peer);
+                    addLog('🔴 Viewer đã ngắt kết nối: ' + call.peer);
                     activeCalls = activeCalls.filter(c => c !== call);
                     if (activeCalls.length === 0) {
                         updateStatus('Không còn người xem nào', '');
@@ -280,21 +332,22 @@
                 updateStatus('Đang yêu cầu quyền chia sẻ màn hình...', '');
                 addLog('🖥️ Yêu cầu getDisplayMedia...');
                 
-                // Lấy màn hình
+                // Lấy màn hình với âm thanh
                 localStream = await navigator.mediaDevices.getDisplayMedia({
                     video: {
                         cursor: "always",
                         displaySurface: "monitor"
                     },
-                    audio: false
+                    audio: true  // Thêm audio
                 });
 
                 addLog('✅ Đã lấy được stream màn hình');
                 addLog('Stream tracks: ' + localStream.getTracks().length);
 
-                // Hiển thị video preview
+                // Hiển thị video preview (không muted để kiểm tra)
                 const video = document.getElementById('video');
                 video.srcObject = localStream;
+                video.muted = false; // Unmute để người chia sẻ có thể nghe
                 document.getElementById('videoContainer').classList.add('show');
 
                 // Tạo link chia sẻ
@@ -358,7 +411,7 @@
             document.getElementById('info').innerHTML = 'Đang kết nối để xem màn hình...';
             document.getElementById('startBtn').style.display = 'none';
             
-            // Tạo một dummy stream (không bắt buộc nhưng giúp kết nối ổn định hơn)
+            // Tạo một dummy stream
             const dummyCanvas = document.createElement('canvas');
             dummyCanvas.width = 1;
             dummyCanvas.height = 1;
@@ -382,23 +435,22 @@
                 addLog('✅ Nhận được stream từ host!');
                 addLog('Remote stream tracks: ' + remoteStream.getTracks().length);
                 
-                const video = document.getElementById('video');
-                video.srcObject = remoteStream;
+                // Lưu stream tạm thời
+                pendingRemoteStream = remoteStream;
+                
+                // Hiển thị container và overlay
                 document.getElementById('videoContainer').classList.add('show');
-                updateStatus('✅ Đang xem màn hình được chia sẻ', 'connected');
+                document.getElementById('connectOverlay').classList.remove('hidden');
+                updateStatus('✅ Đã kết nối. Nhấn nút để phát video', 'connected');
                 document.getElementById('info').style.display = 'none';
-
-                // Đảm bảo video play
-                video.play().catch(e => {
-                    addLog('⚠️ Lỗi autoplay: ' + e.message);
-                });
             });
 
             call.on('close', function() {
-                addLog('📴 Kết nối đã đóng');
+                addLog('🔴 Kết nối đã đóng');
                 updateStatus('Người chia sẻ đã ngắt kết nối', 'error');
                 document.getElementById('video').srcObject = null;
                 document.getElementById('videoContainer').classList.remove('show');
+                document.getElementById('connectOverlay').classList.add('hidden');
             });
 
             call.on('error', function(err) {
@@ -413,6 +465,36 @@
                     updateStatus('Timeout: Không nhận được stream từ host', 'error');
                 }
             }, 10000);
+        }
+
+        // Kích hoạt viewer (xử lý autoplay block)
+        function activateViewer() {
+            addLog('🎬 Kích hoạt viewer...');
+            
+            if (!pendingRemoteStream) {
+                addLog('❌ Không có stream để phát');
+                return;
+            }
+            
+            const video = document.getElementById('video');
+            video.srcObject = pendingRemoteStream;
+            video.muted = false; // Unmute để có âm thanh
+            
+            // Play video
+            video.play().then(() => {
+                addLog('✅ Video đang phát với âm thanh');
+                updateStatus('✅ Đang xem màn hình được chia sẻ', 'connected');
+                document.getElementById('connectOverlay').classList.add('hidden');
+            }).catch(e => {
+                addLog('⚠️ Lỗi khi phát video: ' + e.message);
+                // Thử lại với muted
+                video.muted = true;
+                video.play().then(() => {
+                    addLog('⚠️ Đang phát video không có âm thanh');
+                    updateStatus('⚠️ Đang xem (không có âm thanh)', 'connected');
+                    document.getElementById('connectOverlay').classList.add('hidden');
+                });
+            });
         }
 
         // Sao chép link
